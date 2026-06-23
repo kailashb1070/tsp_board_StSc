@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Screener — Configuration Reference</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --bg:          #0a0e1a;
+      --bg2:         #0f1629;
+      --bg3:         #151d35;
+      --card:        #1a2340;
+      --card2:       #1f2b4a;
+      --border:      #2a3a5c;
+      --green:       #22c55e;
+      --green-dim:   #16a34a;
+      --green-glow:  rgba(34,197,94,0.15);
+      --amber:       #f59e0b;
+      --amber-dim:   #d97706;
+      --amber-glow:  rgba(245,158,11,0.15);
+      --blue:        #3b82f6;
+      --blue-dim:    #2563eb;
+      --red:         #ef4444;
+      --text:        #e2e8f0;
+      --text-dim:    #94a3b8;
+      --text-muted:  #64748b;
+      --accent:      #0ea5e9;
+      --font-mono:   'JetBrains Mono', monospace;
+      --font-sans:   'Inter', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.6; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,14,26,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); padding: 0 32px;
+      display: flex; align-items: center; justify-content: space-between; height: 56px;
+    }
+    .nav-brand { font-family: var(--font-mono); color: var(--green); font-size: 14px; font-weight: 600; letter-spacing: 1px; text-decoration: none; }
+    .nav-brand span { color: var(--text-dim); }
+    .nav-links { display: flex; gap: 24px; list-style: none; align-items: center; }
+    .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 13px; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--green); }
+    .nav-links a.active { color: var(--green); border-bottom: 2px solid var(--green); padding-bottom: 2px; }
+    .nav-links a.nav-cta {
+      background: var(--green-glow); border: 1px solid rgba(34,197,94,0.3); color: var(--green);
+      padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    }
+
+    /* HERO */
+    .hero {
+      min-height: 50vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 100px 24px 60px; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(34,197,94,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(34,197,94,0.03) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(34,197,94,0.03) 1px, transparent 1px);
+      background-size: 40px 40px; pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--green-glow); border: 1px solid rgba(34,197,94,0.3); color: var(--green);
+      padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 28px;
+    }
+    .hero h1 { font-size: clamp(32px,5vw,58px); font-weight: 700; letter-spacing: -2px; line-height: 1.1; margin-bottom: 20px; }
+    .hero h1 .highlight { color: var(--green); }
+    .hero-tagline { font-size: clamp(15px,2vw,18px); color: var(--text-dim); max-width: 560px; margin: 0 auto 48px; font-weight: 300; }
+    .stats-grid { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 16px 22px; min-width: 130px; position: relative; overflow: hidden; transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--green), transparent);
+    }
+    .stat-number { font-family: var(--font-mono); font-size: 22px; font-weight: 600; color: var(--green); display: block; }
+    .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+    /* SECTIONS */
+    section { padding: 64px 24px; max-width: 1060px; margin: 0 auto; }
+    .section-label { font-family: var(--font-mono); font-size: 11px; color: var(--green); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+    .section-title { font-size: clamp(22px,3.5vw,36px); font-weight: 700; letter-spacing: -1px; margin-bottom: 14px; }
+    .section-desc { color: var(--text-dim); font-size: 15px; max-width: 620px; margin-bottom: 28px; }
+    .divider { border: none; height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 0 24px; }
+
+    /* COLLAPSIBLE */
+    .collapsible { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+    .coll-header {
+      padding: 16px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+      font-weight: 600; font-size: 14px; user-select: none; transition: background 0.2s;
+    }
+    .coll-header:hover { background: var(--card2); }
+    .coll-header-left { display: flex; align-items: center; gap: 10px; }
+    .coll-chevron { color: var(--text-muted); transition: transform 0.3s; font-size: 12px; }
+    .coll-header.open .coll-chevron { transform: rotate(180deg); }
+    .coll-body { display: block; padding: 0 20px 20px; }
+    .coll-body.closed { display: none; }
+
+    /* PARAMS TABLE */
+    .params-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+    .params-table th {
+      background: var(--bg3); color: var(--text-dim); font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .params-table td { padding: 10px 14px; border-bottom: 1px solid rgba(42,58,92,0.4); color: var(--text); vertical-align: top; }
+    .params-table tr:last-child td { border-bottom: none; }
+    .params-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .pv { font-family: var(--font-mono); font-size: 12px; padding: 3px 8px; border-radius: 4px; display: inline-block; }
+    .pv.green { background: rgba(34,197,94,0.12); color: var(--green); }
+    .pv.amber { background: rgba(245,158,11,0.12); color: var(--amber); }
+    .pv.blue  { background: rgba(59,130,246,0.12); color: var(--blue); }
+    .pv.red   { background: rgba(239,68,68,0.12);  color: var(--red); }
+    .pv.gray  { background: rgba(148,163,184,0.08); color: var(--text-dim); }
+    td.param-name { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
+    td.param-desc { color: var(--text-dim); font-size: 13px; }
+
+    /* CODE BLOCK */
+    .code-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
+    .code-header { background: var(--bg3); padding: 10px 16px; font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); display: flex; align-items: center; justify-content: space-between; }
+    .code-body { padding: 16px 20px; font-family: var(--font-mono); font-size: 13px; line-height: 1.9; color: var(--text); overflow-x: auto; }
+    .code-body .kw { color: var(--green); }
+    .code-body .flag { color: var(--amber); }
+    .code-body .val { color: var(--accent); }
+    .code-body .comment { color: var(--text-muted); }
+
+    /* FLAG TABLE */
+    .flag-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 20px; }
+    .flag-table th { background: var(--bg3); color: var(--text-dim); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+    .flag-table td { padding: 10px 14px; border-bottom: 1px solid rgba(42,58,92,0.4); vertical-align: top; }
+    .flag-table tr:last-child td { border-bottom: none; }
+    .flag-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* SYMBOL LIST */
+    .sym-wrap { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); line-height: 2.2; word-break: break-all; }
+    .sym-wrap .sym { display: inline-block; padding: 3px 8px; margin: 2px; border-radius: 4px; background: var(--bg3); border: 1px solid var(--border); }
+    .sym-wrap .sym.red { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); color: var(--red); }
+    .sym-wrap .sym.blue { background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.2); color: var(--blue); }
+
+    /* SECRET CARDS */
+    .secret-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 14px; }
+    .secret-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .secret-card:hover { border-color: var(--amber); transform: translateY(-2px); }
+    .secret-name { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--amber); margin-bottom: 8px; }
+    .secret-desc { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+
+    /* COST CARDS */
+    .cost-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 14px; }
+    .cost-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .cost-card:hover { border-color: var(--green); transform: translateY(-2px); }
+    .cost-item { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .cost-price { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--green); }
+    .cost-note { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .cost-card.total { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.04); }
+    .cost-card.total .cost-price { font-size: 32px; }
+
+    /* FADE-IN */
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    .hero > * { animation: fadeInUp 0.6s ease both; }
+    .hero .hero-badge { animation-delay: 0.1s; }
+    .hero h1 { animation-delay: 0.2s; }
+    .hero .hero-tagline { animation-delay: 0.3s; }
+    .hero .stats-grid { animation-delay: 0.4s; }
+
+    footer { text-align: center; padding: 40px 24px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12px; }
+    footer a { color: var(--green); text-decoration: none; }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 16px; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="overview.html" class="nav-brand"><i class="fa-solid fa-chart-line"></i> &nbsp;STOCK<span>·SCREENER</span></a>
+  <ul class="nav-links">
+    <li><a href="overview.html">Overview</a></li>
+    <li><a href="signals.html">Signals</a></li>
+    <li><a href="scoring.html">Scoring</a></li>
+    <li><a href="validation.html">Validation</a></li>
+    <li><a href="params.html" class="active">Params</a></li>
+    <li><a href="https://kailashb1070.github.io/tsp_board_StSc/" target="_blank" class="nav-cta">Live Dashboard ↗</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-badge"><i class="fa-solid fa-sliders"></i> Configuration Reference</div>
+  <h1>All Parameters<br><span class="highlight">In One Place</span></h1>
+  <p class="hero-tagline">No hardcoded magic numbers. Every threshold is documented and tunable.</p>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-number">20+</span>
+      <div class="stat-label">Parameters</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">2</span>
+      <div class="stat-label">ETF Filter Lists</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">4</span>
+      <div class="stat-label">CLI Flags</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">4</span>
+      <div class="stat-label">GitHub Secrets</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- PARAMS REFERENCE -->
+<section id="params">
+  <div class="fade-in">
+    <div class="section-label">// params dict</div>
+    <h2 class="section-title">PARAMS Reference</h2>
+    <p class="section-desc">All values are set in the <code style="font-family:var(--font-mono);color:var(--accent);font-size:13px">PARAMS</code> dict in <code style="font-family:var(--font-mono);color:var(--accent);font-size:13px">nse_screener.py</code>. Click section headers to collapse.</p>
+  </div>
+
+  <!-- Stage 1 -->
+  <div class="collapsible fade-in">
+    <div class="coll-header open" onclick="toggleColl(this)">
+      <div class="coll-header-left"><i class="fa-solid fa-filter" style="color:var(--green)"></i> Stage 1 Pre-Filter</div>
+      <i class="fa-solid fa-chevron-down coll-chevron"></i>
+    </div>
+    <div class="coll-body">
+      <table class="params-table">
+        <thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="param-name">min_price</td>
+            <td><span class="pv green">$5.00</span></td>
+            <td class="param-desc">Skip penny stocks and distressed micro-caps. Below this price, liquidity and data quality are unreliable.</td>
+          </tr>
+          <tr>
+            <td class="param-name">s1_rsi_min</td>
+            <td><span class="pv green">40</span></td>
+            <td class="param-desc">Lower RSI bound for Stage 1. Wide net — allows early movers not yet at 50.</td>
+          </tr>
+          <tr>
+            <td class="param-name">s1_rsi_max</td>
+            <td><span class="pv amber">85</span></td>
+            <td class="param-desc">Upper RSI bound for Stage 1. Very generous — extreme overbought cases only excluded.</td>
+          </tr>
+          <tr>
+            <td class="param-name">s1_volume_ratio_min</td>
+            <td><span class="pv green">1.2×</span></td>
+            <td class="param-desc">Minimum above-average volume interest required to pass Stage 1. Excludes dead volume days.</td>
+          </tr>
+          <tr>
+            <td class="param-name">s1_close_vs_high_min</td>
+            <td><span class="pv green">0.96</span></td>
+            <td class="param-desc">Close must be at least 96% of the day's high. Eliminates collapsing candles from consideration.</td>
+          </tr>
+          <tr>
+            <td class="param-name">s1_ma20_proximity</td>
+            <td><span class="pv green">0.95</span></td>
+            <td class="param-desc">Close must be at least 95% of the 20-day MA. Requires the stock to be near its short-term trend.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Stage 2 BUY -->
+  <div class="collapsible fade-in">
+    <div class="coll-header open" onclick="toggleColl(this)">
+      <div class="coll-header-left"><i class="fa-solid fa-arrow-trend-up" style="color:var(--blue)"></i> Stage 2 BUY Rules</div>
+      <i class="fa-solid fa-chevron-down coll-chevron"></i>
+    </div>
+    <div class="coll-body">
+      <table class="params-table">
+        <thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="param-name">close_vs_high_min</td>
+            <td><span class="pv green">0.985</span></td>
+            <td class="param-desc">Close must be at least 98.5% of the day's high — tight gate requiring buyers to hold price near top.</td>
+          </tr>
+          <tr>
+            <td class="param-name">volume_ratio_min</td>
+            <td><span class="pv green">1.5×</span></td>
+            <td class="param-desc">Volume must exceed 1.5× the 20-day average. Institutional-level conviction threshold.</td>
+          </tr>
+          <tr>
+            <td class="param-name">rsi_min</td>
+            <td><span class="pv green">50</span></td>
+            <td class="param-desc">RSI must be above 50 — confirms momentum has crossed into bullish territory.</td>
+          </tr>
+          <tr>
+            <td class="param-name">rsi_max</td>
+            <td><span class="pv amber">75</span></td>
+            <td class="param-desc">RSI must be below 75 — avoids entering already-overbought setups.</td>
+          </tr>
+          <tr>
+            <td class="param-name">macd_line_positive</td>
+            <td><span class="pv green">True</span></td>
+            <td class="param-desc">MACD line (EMA12 − EMA26) must be positive. Confirms medium-term trend is up.</td>
+          </tr>
+          <tr>
+            <td class="param-name">close_above_ma20</td>
+            <td><span class="pv green">True</span></td>
+            <td class="param-desc">Close must be above the 20-day moving average — short-term trend confirmed.</td>
+          </tr>
+          <tr>
+            <td class="param-name">bullish_candle</td>
+            <td><span class="pv green">True</span></td>
+            <td class="param-desc">Close must be greater than Open — green candle required.</td>
+          </tr>
+          <tr>
+            <td class="param-name">w52_high_cap</td>
+            <td><span class="pv amber">99.0%</span></td>
+            <td class="param-desc">Block signals within 1% of 52-week high unless a Bollinger Band breakout confirms.</td>
+          </tr>
+          <tr>
+            <td class="param-name">earnings_buffer_days</td>
+            <td><span class="pv amber">5</span></td>
+            <td class="param-desc">Reject signals if earnings are within ±5 calendar days. Removes binary event risk.</td>
+          </tr>
+          <tr>
+            <td class="param-name">max_debt_equity</td>
+            <td><span class="pv red">300</span></td>
+            <td class="param-desc">Reject if Debt/Equity ratio exceeds 300 on yfinance's raw scale. Filters extreme leverage.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Stage 2 SELL -->
+  <div class="collapsible fade-in">
+    <div class="coll-header open" onclick="toggleColl(this)">
+      <div class="coll-header-left"><i class="fa-solid fa-arrow-trend-down" style="color:var(--red)"></i> Stage 2 SELL Rules</div>
+      <i class="fa-solid fa-chevron-down coll-chevron"></i>
+    </div>
+    <div class="coll-body">
+      <table class="params-table">
+        <thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="param-name">sell_rsi_min</td>
+            <td><span class="pv amber">30</span></td>
+            <td class="param-desc">SELL will not fire if RSI is below 30. Avoids entering into oversold bounce traps.</td>
+          </tr>
+          <tr>
+            <td class="param-name">sell_rsi_max</td>
+            <td><span class="pv amber">55</span></td>
+            <td class="param-desc">SELL will not fire if RSI is above 55. A reading above 55 indicates momentum still intact — not a SELL setup.</td>
+          </tr>
+          <tr>
+            <td class="param-name">sell_cooldown_days</td>
+            <td><span class="pv gray">5</span></td>
+            <td class="param-desc">No repeat SELL on the same symbol within 5 calendar days. Shorter window than BUY cooldown.</td>
+          </tr>
+          <tr>
+            <td class="param-name">buy_sell_conflict_window</td>
+            <td><span class="pv gray">5</span></td>
+            <td class="param-desc">Block a SELL signal if a BUY fired in the last 5 days (and vice versa). Prevents contradictory signals.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Signal Quality -->
+  <div class="collapsible fade-in">
+    <div class="coll-header open" onclick="toggleColl(this)">
+      <div class="coll-header-left"><i class="fa-solid fa-shield-check" style="color:var(--amber)"></i> Signal Quality &amp; Conviction</div>
+      <i class="fa-solid fa-chevron-down coll-chevron"></i>
+    </div>
+    <div class="coll-body">
+      <table class="params-table">
+        <thead><tr><th>Parameter</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="param-name">noise_floor_score</td>
+            <td><span class="pv red">30</span></td>
+            <td class="param-desc">Any signal scoring below 30 is dropped entirely. Eliminates ~42% of historical low-quality output.</td>
+          </tr>
+          <tr>
+            <td class="param-name">etf_min_score</td>
+            <td><span class="pv amber">40</span></td>
+            <td class="param-desc">ETFs require a minimum score of 40. ETFs lack fundamental data (no EPS, D/E), so technicals must compensate.</td>
+          </tr>
+          <tr>
+            <td class="param-name">score_high</td>
+            <td><span class="pv green">75</span></td>
+            <td class="param-desc">Signals scoring 75+ receive HIGH conviction label. Fire in all market regimes including NEUTRAL.</td>
+          </tr>
+          <tr>
+            <td class="param-name">score_medium</td>
+            <td><span class="pv amber">55</span></td>
+            <td class="param-desc">Signals scoring 55–74 receive MEDIUM conviction label. Suppressed in NEUTRAL regime.</td>
+          </tr>
+          <tr>
+            <td class="param-name">signal_cooldown_days</td>
+            <td><span class="pv gray">20</span></td>
+            <td class="param-desc">No repeat BUY signal on the same symbol within 20 calendar days. Prevents over-signalling.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- SYMBOL FILTER LISTS -->
+<section id="lists">
+  <div class="fade-in">
+    <div class="section-label">// filter lists</div>
+    <h2 class="section-title">Symbol Filter Lists</h2>
+    <p class="section-desc">Two hardcoded lists govern special handling for inverse ETFs and ETFs.</p>
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:16px;" class="fade-in">
+    <div style="font-size:14px;font-weight:700;color:var(--red);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+      <i class="fa-solid fa-ban"></i> SELL_EXCLUSION_SYMBOLS — Inverse/Volatility ETFs (never trigger SELL)
+    </div>
+    <div style="font-size:13px;color:var(--text-dim);margin-bottom:14px;">A SELL on SQQQ means "bullish on QQQ" — logically inverted. These symbols are always blocked from the SELL signal path.</div>
+    <div class="sym-wrap">
+      <span class="sym red">SQQQ</span><span class="sym red">SPXS</span><span class="sym red">SPXU</span><span class="sym red">UVXY</span><span class="sym red">VXX</span>
+      <span class="sym red">SOXS</span><span class="sym red">TZA</span><span class="sym red">FAZ</span><span class="sym red">SDOW</span><span class="sym red">SRTY</span>
+      <span class="sym red">VIXY</span><span class="sym red">SVXY</span>
+    </div>
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;" class="fade-in">
+    <div style="font-size:14px;font-weight:700;color:var(--blue);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+      <i class="fa-solid fa-chart-bar"></i> ETF_SYMBOLS — Higher minimum score required (40+)
+    </div>
+    <div style="font-size:13px;color:var(--text-dim);margin-bottom:14px;">ETFs have no Forward PE / EPS growth data. The fundamental scoring bonus is unavailable, so a higher technical score is required.</div>
+    <div class="sym-wrap">
+      <span class="sym blue">SPY</span><span class="sym blue">QQQ</span><span class="sym blue">DIA</span><span class="sym blue">IWM</span><span class="sym blue">VTI</span>
+      <span class="sym blue">VOO</span><span class="sym blue">TQQQ</span><span class="sym blue">GLD</span><span class="sym blue">SLV</span><span class="sym blue">GDX</span>
+      <span class="sym blue">TLT</span><span class="sym blue">IEF</span><span class="sym blue">XLK</span><span class="sym blue">XLF</span><span class="sym blue">XLV</span>
+      <span class="sym blue">XLP</span><span class="sym blue">XLE</span><span class="sym blue">XLI</span><span class="sym blue">XLC</span><span class="sym blue">XLRE</span>
+      <span class="sym blue">IBB</span><span class="sym blue">KRE</span><span class="sym blue">VFH</span><span class="sym blue">VNQ</span><span class="sym blue">IYR</span>
+      <span class="sym blue">REM</span><span class="sym blue">HACK</span><span class="sym blue">BUG</span><span class="sym blue">SMH</span><span class="sym blue">SOXX</span>
+      <span class="sym blue">ITA</span>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- CLI REFERENCE -->
+<section id="cli">
+  <div class="fade-in">
+    <div class="section-label">// cli</div>
+    <h2 class="section-title">CLI Reference</h2>
+    <p class="section-desc">Run the screener manually from the command line with full flag control.</p>
+  </div>
+  <div class="code-block fade-in">
+    <div class="code-header">
+      <span>bash</span>
+      <span>screener/nse_screener.py</span>
+    </div>
+    <div class="code-body">
+<span class="kw">python</span> screener/nse_screener.py \<br>
+&nbsp;&nbsp;<span class="flag">--market</span> <span class="val">us</span> \<br>
+&nbsp;&nbsp;<span class="flag">--mode</span> <span class="val">daily</span> \<br>
+&nbsp;&nbsp;<span class="flag">--period</span> <span class="val">6mo</span> \<br>
+&nbsp;&nbsp;<span class="flag">--symbols</span> <span class="val">AAPL MSFT NVDA TSLA</span> \<br>
+&nbsp;&nbsp;<span class="flag">--output</span> <span class="val">signals.csv</span>
+    </div>
+  </div>
+  <table class="flag-table fade-in">
+    <thead>
+      <tr>
+        <th>Flag</th>
+        <th>Options</th>
+        <th>Default</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="pv amber">--market</span></td>
+        <td style="color:var(--text-dim);font-family:var(--font-mono);font-size:12px">us · canada · india · india_bse</td>
+        <td><span class="pv gray">india</span></td>
+        <td style="color:var(--text-dim)">Market to scan. Sets symbol suffix (.NS, .TO, etc.) and currency.</td>
+      </tr>
+      <tr>
+        <td><span class="pv amber">--mode</span></td>
+        <td style="color:var(--text-dim);font-family:var(--font-mono);font-size:12px">daily · week · friday</td>
+        <td><span class="pv gray">week</span></td>
+        <td style="color:var(--text-dim)">daily = today's signal only. week = Mon–Fri window. friday = end-of-week scan.</td>
+      </tr>
+      <tr>
+        <td><span class="pv amber">--period</span></td>
+        <td style="color:var(--text-dim);font-family:var(--font-mono);font-size:12px">3mo · 6mo · 1y · 2y</td>
+        <td><span class="pv gray">6mo</span></td>
+        <td style="color:var(--text-dim)">yfinance history period. Longer periods = more accurate MAs but slower download.</td>
+      </tr>
+      <tr>
+        <td><span class="pv amber">--skip-fundamentals</span></td>
+        <td style="color:var(--text-dim);font-family:var(--font-mono);font-size:12px">(flag)</td>
+        <td><span class="pv gray">off</span></td>
+        <td style="color:var(--text-dim)">Skip Stage 2 fundamental enrichment. Useful for fast test runs — no extra API calls.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<hr class="divider">
+
+<!-- GITHUB SECRETS -->
+<section id="secrets">
+  <div class="fade-in">
+    <div class="section-label">// github secrets</div>
+    <h2 class="section-title">GitHub Secrets</h2>
+    <p class="section-desc">All credentials are stored as GitHub Actions repository secrets — never committed to code.</p>
+  </div>
+  <div class="secret-grid fade-in">
+    <div class="secret-card">
+      <div class="secret-name">GMAIL_ADDRESS</div>
+      <div class="secret-desc">Sender Gmail address (e.g. you@gmail.com). Used as the From address for all alert and validation emails.</div>
+    </div>
+    <div class="secret-card">
+      <div class="secret-name">GMAIL_APP_PASSWORD</div>
+      <div class="secret-desc">16-character Gmail App Password — not your account login password. Enable 2FA → myaccount.google.com/apppasswords → create "Stock Screener" → copy the code.</div>
+    </div>
+    <div class="secret-card">
+      <div class="secret-name">RECIPIENT_EMAIL</div>
+      <div class="secret-desc">Email address where all signal alerts and validation reports are delivered. Can be different from the sender address.</div>
+    </div>
+    <div class="secret-card">
+      <div class="secret-name">DASHBOARD_TOKEN</div>
+      <div class="secret-desc">GitHub Personal Access Token with <code style="font-family:var(--font-mono);font-size:11px;color:var(--amber)">repo</code> scope. Used by the workflow to push generated HTML to the public dashboard repository.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- COST SUMMARY -->
+<section id="cost">
+  <div class="fade-in">
+    <div class="section-label">// cost</div>
+    <h2 class="section-title">Cost Summary</h2>
+    <p class="section-desc">Every component of this screener is free. No API keys, no subscriptions, no hosting fees.</p>
+  </div>
+  <div class="cost-grid fade-in">
+    <div class="cost-card">
+      <div class="cost-item">GitHub Actions</div>
+      <div class="cost-price">$0</div>
+      <div class="cost-note">2,000 min/month free<br>Screener uses ~100 min</div>
+    </div>
+    <div class="cost-card">
+      <div class="cost-item">yfinance Data</div>
+      <div class="cost-price">$0</div>
+      <div class="cost-note">No API key<br>No rate limits (generous)</div>
+    </div>
+    <div class="cost-card">
+      <div class="cost-item">Gmail SMTP</div>
+      <div class="cost-price">$0</div>
+      <div class="cost-note">Free with App Password<br>Up to 500 emails/day</div>
+    </div>
+    <div class="cost-card">
+      <div class="cost-item">GitHub Pages</div>
+      <div class="cost-price">$0</div>
+      <div class="cost-note">Free for public repos<br>Global CDN included</div>
+    </div>
+    <div class="cost-card total">
+      <div class="cost-item">Total / Month</div>
+      <div class="cost-price">$0</div>
+      <div class="cost-note">Forever</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<footer>
+  <p>Auto-generated by GitHub Actions &nbsp;·&nbsp; Not financial advice &nbsp;·&nbsp; Free forever</p>
+  <p style="margin-top:8px;">
+    <a href="overview.html">Overview</a> &nbsp;·&nbsp;
+    <a href="signals.html">Signals</a> &nbsp;·&nbsp;
+    <a href="scoring.html">Scoring</a> &nbsp;·&nbsp;
+    <a href="validation.html">Validation</a> &nbsp;·&nbsp;
+    <a href="params.html">Params</a>
+  </p>
+</footer>
+
+<script>
+  // IntersectionObserver fade-in
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // Collapsible toggle
+  function toggleColl(header) {
+    header.classList.toggle('open');
+    const body = header.nextElementSibling;
+    body.classList.toggle('closed');
+  }
+</script>
+</body>
+</html>

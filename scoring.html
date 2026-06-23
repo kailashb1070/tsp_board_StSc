@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Screener — Conviction Scoring</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --bg:          #0a0e1a;
+      --bg2:         #0f1629;
+      --bg3:         #151d35;
+      --card:        #1a2340;
+      --card2:       #1f2b4a;
+      --border:      #2a3a5c;
+      --green:       #22c55e;
+      --green-dim:   #16a34a;
+      --green-glow:  rgba(34,197,94,0.15);
+      --amber:       #f59e0b;
+      --amber-dim:   #d97706;
+      --amber-glow:  rgba(245,158,11,0.15);
+      --blue:        #3b82f6;
+      --blue-dim:    #2563eb;
+      --red:         #ef4444;
+      --text:        #e2e8f0;
+      --text-dim:    #94a3b8;
+      --text-muted:  #64748b;
+      --accent:      #0ea5e9;
+      --font-mono:   'JetBrains Mono', monospace;
+      --font-sans:   'Inter', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.6; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,14,26,0.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border); padding: 0 32px;
+      display: flex; align-items: center; justify-content: space-between; height: 56px;
+    }
+    .nav-brand { font-family: var(--font-mono); color: var(--green); font-size: 14px; font-weight: 600; letter-spacing: 1px; text-decoration: none; }
+    .nav-brand span { color: var(--text-dim); }
+    .nav-links { display: flex; gap: 24px; list-style: none; align-items: center; }
+    .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 13px; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--green); }
+    .nav-links a.active { color: var(--green); border-bottom: 2px solid var(--green); padding-bottom: 2px; }
+    .nav-links a.nav-cta {
+      background: var(--green-glow); border: 1px solid rgba(34,197,94,0.3); color: var(--green);
+      padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    }
+
+    /* HERO */
+    .hero {
+      min-height: 55vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 100px 24px 60px; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(245,158,11,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(245,158,11,0.03) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(245,158,11,0.03) 1px, transparent 1px);
+      background-size: 40px 40px; pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--amber-glow); border: 1px solid rgba(245,158,11,0.3); color: var(--amber);
+      padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 28px;
+    }
+    .hero h1 { font-size: clamp(32px,5vw,60px); font-weight: 700; letter-spacing: -2px; line-height: 1.1; margin-bottom: 20px; }
+    .hero h1 .highlight { color: var(--amber); }
+    .hero-tagline { font-size: clamp(15px,2vw,18px); color: var(--text-dim); max-width: 560px; margin: 0 auto 48px; font-weight: 300; }
+    .stats-grid { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 18px 24px; min-width: 140px; position: relative; overflow: hidden; transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--amber), transparent);
+    }
+    .stat-number { font-family: var(--font-mono); font-size: 26px; font-weight: 600; color: var(--amber); display: block; }
+    .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+    /* SECTIONS */
+    section { padding: 72px 24px; max-width: 1060px; margin: 0 auto; }
+    .section-label { font-family: var(--font-mono); font-size: 11px; color: var(--green); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+    .section-title { font-size: clamp(22px,3.5vw,36px); font-weight: 700; letter-spacing: -1px; margin-bottom: 14px; }
+    .section-desc { color: var(--text-dim); font-size: 15px; max-width: 620px; margin-bottom: 36px; }
+    .divider { border: none; height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 0 24px; }
+
+    /* SCORE CATEGORY GRID */
+    .score-cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 16px; }
+    .score-cat-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .score-cat-card:hover { border-color: var(--amber); transform: translateY(-2px); }
+    .score-cat-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .score-cat-name { font-size: 15px; font-weight: 700; }
+    .score-cat-max { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--amber); }
+    .score-bar-bg { height: 6px; background: var(--bg3); border-radius: 3px; margin-bottom: 14px; overflow: hidden; }
+    .score-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--amber), var(--green)); }
+    .score-factors { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
+    .score-factor-item { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; border-bottom: 1px solid rgba(42,58,92,0.4); }
+    .score-factor-item:last-child { border-bottom: none; }
+    .score-pts { font-family: var(--font-mono); font-size: 11px; color: var(--green); min-width: 40px; font-weight: 600; }
+    .score-pts.neg { color: var(--red); }
+
+    /* CONVICTION GRID */
+    .conviction-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .conv-card {
+      border-radius: 12px; padding: 24px; border: 1px solid var(--border); text-align: center;
+      transition: transform 0.2s;
+    }
+    .conv-card:hover { transform: translateY(-2px); }
+    .conv-score { font-family: var(--font-mono); font-size: 40px; font-weight: 700; margin-bottom: 8px; }
+    .conv-label { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+    .conv-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+    .conv-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; font-family: var(--font-mono); margin-top: 12px; }
+    .conv-card.high { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.04); }
+    .conv-card.high .conv-score, .conv-card.high .conv-label { color: var(--green); }
+    .conv-card.high .conv-badge { background: var(--green-glow); color: var(--green); }
+    .conv-card.medium { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.04); }
+    .conv-card.medium .conv-score, .conv-card.medium .conv-label { color: var(--amber); }
+    .conv-card.medium .conv-badge { background: var(--amber-glow); color: var(--amber); }
+    .conv-card.spec { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.04); }
+    .conv-card.spec .conv-score, .conv-card.spec .conv-label { color: var(--red); }
+    .conv-card.spec .conv-badge { background: rgba(239,68,68,0.12); color: var(--red); }
+
+    /* MACD STATES */
+    .macd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 14px; }
+    .macd-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .macd-card:hover { transform: translateY(-2px); }
+    .macd-state { font-family: var(--font-mono); font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+    .macd-card.fresh { border-color: rgba(34,197,94,0.4); }
+    .macd-card.fresh .macd-state { color: var(--green); }
+    .macd-card.accel { border-color: rgba(59,130,246,0.4); }
+    .macd-card.accel .macd-state { color: var(--blue); }
+    .macd-card.pos { border-color: rgba(245,158,11,0.3); }
+    .macd-card.pos .macd-state { color: var(--amber); }
+    .macd-card.neg { border-color: rgba(239,68,68,0.3); }
+    .macd-card.neg .macd-state { color: var(--red); }
+    .macd-pts { font-family: var(--font-mono); font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .macd-card.fresh .macd-pts { color: var(--green); }
+    .macd-card.accel .macd-pts { color: var(--blue); }
+    .macd-card.pos .macd-pts { color: var(--amber); }
+    .macd-card.neg .macd-pts { color: var(--red); }
+    .macd-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+    /* REGIME GRID */
+    .regime-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .regime-card { border-radius: 12px; padding: 20px; border: 1px solid var(--border); transition: transform 0.2s; }
+    .regime-card:hover { transform: translateY(-2px); }
+    .regime-card.bull { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.04); }
+    .regime-card.neutral { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.04); }
+    .regime-card.bear { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.04); }
+    .regime-name { font-size: 18px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .regime-card.bull .regime-name { color: var(--green); }
+    .regime-card.neutral .regime-name { color: var(--amber); }
+    .regime-card.bear .regime-name { color: var(--red); }
+    .regime-cond { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.6; }
+    .regime-action { font-size: 13px; font-weight: 600; }
+    .regime-card.bull .regime-action { color: var(--green); }
+    .regime-card.neutral .regime-action { color: var(--amber); }
+    .regime-card.bear .regime-action { color: var(--red); }
+    .regime-inputs {
+      display: flex; align-items: center; gap: 12px; justify-content: center;
+      margin-bottom: 32px; flex-wrap: wrap;
+    }
+    .regime-input-box {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px 24px; text-align: center; min-width: 120px;
+    }
+    .regime-input-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .regime-input-val { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--text); margin-top: 4px; }
+    .regime-arrow { color: var(--text-muted); font-size: 20px; }
+
+    /* WORKED EXAMPLE */
+    .example-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .example-header {
+      background: var(--bg3); padding: 12px 20px; font-size: 11px; color: var(--text-muted);
+      font-family: var(--font-mono); display: flex; align-items: center; justify-content: space-between;
+    }
+    .example-body { padding: 20px; font-family: var(--font-mono); font-size: 13px; line-height: 2; }
+    .ex-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(42,58,92,0.3); }
+    .ex-row:last-child { border-bottom: none; }
+    .ex-key { color: var(--text-dim); }
+    .ex-val { color: var(--text); }
+    .ex-pts { color: var(--green); font-weight: 600; }
+    .ex-total { font-size: 15px; font-weight: 700; color: var(--green); padding-top: 12px; display: flex; align-items: center; justify-content: space-between; }
+    .ex-label { font-size: 12px; color: var(--text-muted); }
+    .ex-divider { border: none; height: 1px; background: var(--border); margin: 12px 0; }
+
+    /* FADE-IN */
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    .hero > * { animation: fadeInUp 0.6s ease both; }
+    .hero .hero-badge { animation-delay: 0.1s; }
+    .hero h1 { animation-delay: 0.2s; }
+    .hero .hero-tagline { animation-delay: 0.3s; }
+    .hero .stats-grid { animation-delay: 0.4s; }
+
+    footer { text-align: center; padding: 40px 24px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12px; }
+    footer a { color: var(--green); text-decoration: none; }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 16px; }
+      .nav-links { display: none; }
+      .conviction-grid { grid-template-columns: 1fr; }
+      .regime-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="overview.html" class="nav-brand"><i class="fa-solid fa-chart-line"></i> &nbsp;STOCK<span>·SCREENER</span></a>
+  <ul class="nav-links">
+    <li><a href="overview.html">Overview</a></li>
+    <li><a href="signals.html">Signals</a></li>
+    <li><a href="scoring.html" class="active">Scoring</a></li>
+    <li><a href="validation.html">Validation</a></li>
+    <li><a href="params.html">Params</a></li>
+    <li><a href="https://kailashb1070.github.io/tsp_board_StSc/" target="_blank" class="nav-cta">Live Dashboard ↗</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-badge"><i class="fa-solid fa-star"></i> Transparent Scoring</div>
+  <h1>Conviction<br><span class="highlight">Scoring System</span></h1>
+  <p class="hero-tagline">Every signal gets a 0–100 score. No black boxes.</p>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-number">5</span>
+      <div class="stat-label">Scoring Categories</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">100</span>
+      <div class="stat-label">Max Points</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">3</span>
+      <div class="stat-label">Conviction Labels</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">Regime</span>
+      <div class="stat-label">Aware</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- SCORE BREAKDOWN -->
+<section id="breakdown">
+  <div class="fade-in">
+    <div class="section-label">// score breakdown</div>
+    <h2 class="section-title">Score Breakdown</h2>
+    <p class="section-desc">Five technical categories plus a fundamental bonus. Points are additive. Max raw score exceeds 100 — final score is capped and normalized.</p>
+  </div>
+  <div class="score-cat-grid">
+    <div class="score-cat-card fade-in">
+      <div class="score-cat-header">
+        <div class="score-cat-name"><i class="fa-solid fa-wave-square" style="color:var(--amber);margin-right:8px;"></i>MACD</div>
+        <div class="score-cat-max">20 pts</div>
+      </div>
+      <div class="score-bar-bg"><div class="score-bar-fill" style="width:20%"></div></div>
+      <div class="score-factors">
+        <div class="score-factor-item"><span class="score-pts">+20</span><span>FRESH_CROSS — histogram just crossed above zero. Highest predictive value.</span></div>
+        <div class="score-factor-item"><span class="score-pts">+10</span><span>ACCELERATING — histogram positive and growing</span></div>
+        <div class="score-factor-item"><span class="score-pts">+6</span><span>POSITIVE — mid-trend, above zero but flat</span></div>
+        <div class="score-factor-item"><span class="score-pts neg">0</span><span>NEGATIVE — bearish momentum, no points</span></div>
+      </div>
+    </div>
+    <div class="score-cat-card fade-in">
+      <div class="score-cat-header">
+        <div class="score-cat-name"><i class="fa-solid fa-gauge-high" style="color:var(--amber);margin-right:8px;"></i>RSI</div>
+        <div class="score-cat-max">28 pts</div>
+      </div>
+      <div class="score-bar-bg"><div class="score-bar-fill" style="width:28%"></div></div>
+      <div class="score-factors">
+        <div class="score-factor-item"><span class="score-pts">+18</span><span>Fresh RSI cross above 50 — momentum inflection</span></div>
+        <div class="score-factor-item"><span class="score-pts">+12</span><span>RSI in sweet spot 50–62 — early momentum</span></div>
+        <div class="score-factor-item"><span class="score-pts">+6</span><span>RSI 62–68 — momentum continuing</span></div>
+        <div class="score-factor-item"><span class="score-pts neg">-8</span><span>RSI &gt; 68 — overbought penalty applied</span></div>
+      </div>
+    </div>
+    <div class="score-cat-card fade-in">
+      <div class="score-cat-header">
+        <div class="score-cat-name"><i class="fa-solid fa-chart-bar" style="color:var(--amber);margin-right:8px;"></i>Volume</div>
+        <div class="score-cat-max">15 pts</div>
+      </div>
+      <div class="score-bar-bg"><div class="score-bar-fill" style="width:15%"></div></div>
+      <div class="score-factors">
+        <div class="score-factor-item"><span class="score-pts">+15</span><span>Vol_Ratio &ge; 2.0&times; — strong institutional buying</span></div>
+        <div class="score-factor-item"><span class="score-pts">+8</span><span>Vol_Ratio &ge; 1.5&times; — above-average conviction</span></div>
+        <div class="score-factor-item"><span class="score-pts neg">0</span><span>Below 1.5&times; — passes gate but no bonus</span></div>
+      </div>
+    </div>
+    <div class="score-cat-card fade-in">
+      <div class="score-cat-header">
+        <div class="score-cat-name"><i class="fa-solid fa-candlestick-chart" style="color:var(--amber);margin-right:8px;"></i>Price Action</div>
+        <div class="score-cat-max">22 pts</div>
+      </div>
+      <div class="score-bar-bg"><div class="score-bar-fill" style="width:22%"></div></div>
+      <div class="score-factors">
+        <div class="score-factor-item"><span class="score-pts">+10</span><span>Close/High &ge; 99% — closing at session top</span></div>
+        <div class="score-factor-item"><span class="score-pts">+5</span><span>Bullish candle — Close &gt; Open</span></div>
+        <div class="score-factor-item"><span class="score-pts">+7</span><span>BB Breakout — price above upper Bollinger Band</span></div>
+      </div>
+    </div>
+    <div class="score-cat-card fade-in">
+      <div class="score-cat-header">
+        <div class="score-cat-name"><i class="fa-solid fa-layer-group" style="color:var(--amber);margin-right:8px;"></i>Trend Structure</div>
+        <div class="score-cat-max">32 pts</div>
+      </div>
+      <div class="score-bar-bg"><div class="score-bar-fill" style="width:32%"></div></div>
+      <div class="score-factors">
+        <div class="score-factor-item"><span class="score-pts">+5</span><span>Price above MA20</span></div>
+        <div class="score-factor-item"><span class="score-pts">+8</span><span>Price above MA50</span></div>
+        <div class="score-factor-item"><span class="score-pts">+7</span><span>Price above MA200</span></div>
+        <div class="score-factor-item"><span class="score-pts">+7</span><span>Golden Cross (MA50 &gt; MA200)</span></div>
+        <div class="score-factor-item"><span class="score-pts">+5</span><span>OBV Rising — on-balance volume trending up</span></div>
+      </div>
+    </div>
+    <div class="score-cat-card fade-in">
+      <div class="score-cat-header">
+        <div class="score-cat-name"><i class="fa-solid fa-building-columns" style="color:var(--amber);margin-right:8px;"></i>Fundamentals</div>
+        <div class="score-cat-max">+20 bonus</div>
+      </div>
+      <div class="score-bar-bg"><div class="score-bar-fill" style="width:20%;background:var(--blue);"></div></div>
+      <div class="score-factors">
+        <div class="score-factor-item"><span class="score-pts">+8</span><span>EPS growth &gt; 10% year-over-year</span></div>
+        <div class="score-factor-item"><span class="score-pts">+5</span><span>Debt/Equity &lt; 1&times; (clean balance sheet)</span></div>
+        <div class="score-factor-item"><span class="score-pts">+4</span><span>Short interest &lt; 5% (low squeeze risk)</span></div>
+        <div class="score-factor-item"><span class="score-pts">+3</span><span>Analyst consensus = Buy</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- CONVICTION LABELS -->
+<section id="labels">
+  <div class="fade-in">
+    <div class="section-label">// conviction labels</div>
+    <h2 class="section-title">Conviction Labels</h2>
+    <p class="section-desc">Three labels assigned based on final score. Labels also determine which market regimes allow the signal to fire.</p>
+  </div>
+  <div class="conviction-grid fade-in">
+    <div class="conv-card high">
+      <div class="conv-score">&ge; 75</div>
+      <div class="conv-label">★ HIGH</div>
+      <div class="conv-desc">All technical and fundamental factors aligned. Fires in all market regimes including NEUTRAL.</div>
+      <div class="conv-badge">Fires in BULL + NEUTRAL</div>
+    </div>
+    <div class="conv-card medium">
+      <div class="conv-score">&ge; 55</div>
+      <div class="conv-label">◆ MEDIUM</div>
+      <div class="conv-desc">Solid technical setup, fundamentals acceptable. Suppressed in NEUTRAL market regime — only fires in BULL.</div>
+      <div class="conv-badge">Fires in BULL only</div>
+    </div>
+    <div class="conv-card spec">
+      <div class="conv-score">&lt; 55</div>
+      <div class="conv-label">◇ SPECULATIVE</div>
+      <div class="conv-desc">Technical pass but weaker picture. Suppressed in both NEUTRAL and BEAR regimes.</div>
+      <div class="conv-badge">Fires in BULL only</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- MACD STATES -->
+<section id="macd-states">
+  <div class="fade-in">
+    <div class="section-label">// macd states</div>
+    <h2 class="section-title">MACD State Labels</h2>
+    <p class="section-desc">The screener classifies each symbol's MACD into one of four states. These appear in results and drive the largest single scoring category.</p>
+  </div>
+  <div class="macd-grid fade-in">
+    <div class="macd-card fresh">
+      <div class="macd-state">FRESH_CROSS</div>
+      <div class="macd-pts">+20 pts</div>
+      <div class="macd-desc">Histogram just crossed above zero for the first time. Highest predictive value — catching the momentum inflection.</div>
+    </div>
+    <div class="macd-card accel">
+      <div class="macd-state">ACCELERATING</div>
+      <div class="macd-pts">+10 pts</div>
+      <div class="macd-desc">Histogram is positive and growing bar-over-bar. Trend is strengthening — continuation probable.</div>
+    </div>
+    <div class="macd-card pos">
+      <div class="macd-state">POSITIVE</div>
+      <div class="macd-pts">+6 pts</div>
+      <div class="macd-desc">Histogram positive but not accelerating. Mid-trend state — setup still valid, less urgency.</div>
+    </div>
+    <div class="macd-card neg">
+      <div class="macd-state">NEGATIVE</div>
+      <div class="macd-pts">0 pts</div>
+      <div class="macd-desc">Histogram below zero. Bearish momentum. BUY signals cannot fire in this state — MACD line gate also applies.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- MARKET REGIME GATE -->
+<section id="regime">
+  <div class="fade-in">
+    <div class="section-label">// regime gate</div>
+    <h2 class="section-title">Market Regime Gate</h2>
+    <p class="section-desc">SPY and VIX are used to classify the overall market before any signals are emitted. The regime suppresses signals in bad conditions.</p>
+  </div>
+  <div class="regime-inputs fade-in">
+    <div class="regime-input-box">
+      <div class="regime-input-label">Input 1</div>
+      <div class="regime-input-val">SPY</div>
+    </div>
+    <div class="regime-arrow"><i class="fa-solid fa-plus"></i></div>
+    <div class="regime-input-box">
+      <div class="regime-input-label">Input 2</div>
+      <div class="regime-input-val">VIX</div>
+    </div>
+    <div class="regime-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+    <div class="regime-input-box" style="border-color:rgba(34,197,94,0.3);">
+      <div class="regime-input-label">Output</div>
+      <div class="regime-input-val" style="color:var(--green);">Regime</div>
+    </div>
+  </div>
+  <div class="regime-grid fade-in">
+    <div class="regime-card bull">
+      <div class="regime-name"><i class="fa-solid fa-arrow-trend-up"></i> BULL</div>
+      <div class="regime-cond">SPY above MA50 <strong>AND</strong> MA200<br>VIX &lt; 25</div>
+      <div class="regime-action"><i class="fa-solid fa-check-circle"></i> All signals fire — HIGH, MEDIUM, SPECULATIVE</div>
+    </div>
+    <div class="regime-card neutral">
+      <div class="regime-name"><i class="fa-solid fa-minus"></i> NEUTRAL</div>
+      <div class="regime-cond">SPY above MA200 only<br>OR VIX between 25–30</div>
+      <div class="regime-action"><i class="fa-solid fa-circle-half-stroke"></i> Only HIGH conviction BUY signals fire</div>
+    </div>
+    <div class="regime-card bear">
+      <div class="regime-name"><i class="fa-solid fa-arrow-trend-down"></i> BEAR</div>
+      <div class="regime-cond">SPY below MA200<br>OR VIX &gt; 30</div>
+      <div class="regime-action"><i class="fa-solid fa-ban"></i> BUY signals fully suppressed</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- WORKED EXAMPLE -->
+<section id="example">
+  <div class="fade-in">
+    <div class="section-label">// worked example</div>
+    <h2 class="section-title">Worked Example</h2>
+    <p class="section-desc">A realistic signal walkthrough showing how points accumulate to a final conviction label.</p>
+  </div>
+  <div class="example-card fade-in">
+    <div class="example-header">
+      <span>// signal walkthrough — LRCX (Lam Research)</span>
+      <span style="color:var(--green);">Score: 86 → HIGH ★</span>
+    </div>
+    <div class="example-body">
+      <div class="ex-row">
+        <span class="ex-key">MACD_State: FRESH_CROSS</span>
+        <span class="ex-pts">+20 pts</span>
+      </div>
+      <div class="ex-row">
+        <span class="ex-key">RSI: 54.2 (just crossed 50 — fresh signal)</span>
+        <span class="ex-pts">+18 pts</span>
+      </div>
+      <div class="ex-row">
+        <span class="ex-key">RSI: 54.2 (in sweet spot 50–62)</span>
+        <span class="ex-pts">+12 pts</span>
+      </div>
+      <div class="ex-row">
+        <span class="ex-key">Vol_Ratio: 2.3×</span>
+        <span class="ex-pts">+15 pts</span>
+      </div>
+      <div class="ex-row">
+        <span class="ex-key">Close/High: 99.1%</span>
+        <span class="ex-pts">+10 pts</span>
+      </div>
+      <div class="ex-row">
+        <span class="ex-key">Bullish candle (Close &gt; Open)</span>
+        <span class="ex-pts">+5 pts</span>
+      </div>
+      <div class="ex-row">
+        <span class="ex-key">Above MA20 + MA50 + MA200</span>
+        <span class="ex-pts">+20 pts</span>
+      </div>
+      <div class="ex-row">
+        <span class="ex-key">EPS growth 18% YoY</span>
+        <span class="ex-pts">+8 pts</span>
+      </div>
+      <div class="ex-row">
+        <span class="ex-key">Debt/Equity = 0.8×</span>
+        <span class="ex-pts">+5 pts</span>
+      </div>
+      <div class="ex-divider"></div>
+      <div class="ex-total">
+        <span>Raw: 113 pts / 132 max pts &nbsp;→&nbsp; <strong style="color:var(--green)">Score = 86</strong></span>
+        <span style="background:var(--green-glow);color:var(--green);border:1px solid rgba(34,197,94,0.3);padding:4px 14px;border-radius:20px;font-size:12px;">HIGH ★</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<footer>
+  <p>Auto-generated by GitHub Actions &nbsp;·&nbsp; Not financial advice &nbsp;·&nbsp; Free forever</p>
+  <p style="margin-top:8px;">
+    <a href="overview.html">Overview</a> &nbsp;·&nbsp;
+    <a href="signals.html">Signals</a> &nbsp;·&nbsp;
+    <a href="scoring.html">Scoring</a> &nbsp;·&nbsp;
+    <a href="validation.html">Validation</a> &nbsp;·&nbsp;
+    <a href="params.html">Params</a>
+  </p>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

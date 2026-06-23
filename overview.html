@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Screener — Overview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --bg:          #0a0e1a;
+      --bg2:         #0f1629;
+      --bg3:         #151d35;
+      --card:        #1a2340;
+      --card2:       #1f2b4a;
+      --border:      #2a3a5c;
+      --green:       #22c55e;
+      --green-dim:   #16a34a;
+      --green-glow:  rgba(34,197,94,0.15);
+      --amber:       #f59e0b;
+      --amber-dim:   #d97706;
+      --amber-glow:  rgba(245,158,11,0.15);
+      --blue:        #3b82f6;
+      --blue-dim:    #2563eb;
+      --red:         #ef4444;
+      --text:        #e2e8f0;
+      --text-dim:    #94a3b8;
+      --text-muted:  #64748b;
+      --accent:      #0ea5e9;
+      --font-mono:   'JetBrains Mono', monospace;
+      --font-sans:   'Inter', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: var(--font-sans); line-height: 1.6; overflow-x: hidden; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,14,26,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    .nav-brand { font-family: var(--font-mono); color: var(--green); font-size: 14px; font-weight: 600; letter-spacing: 1px; text-decoration: none; }
+    .nav-brand span { color: var(--text-dim); }
+    .nav-links { display: flex; gap: 24px; list-style: none; align-items: center; }
+    .nav-links a { color: var(--text-dim); text-decoration: none; font-size: 13px; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--green); }
+    .nav-links a.active { color: var(--green); border-bottom: 2px solid var(--green); padding-bottom: 2px; }
+    .nav-links a.nav-cta {
+      background: var(--green-glow); border: 1px solid rgba(34,197,94,0.3); color: var(--green);
+      padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    }
+    .nav-links a.nav-cta:hover { background: rgba(34,197,94,0.25); border-color: var(--green); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 80px 24px 60px; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(34,197,94,0.08) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 40% at 80% 80%, rgba(59,130,246,0.06) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image: linear-gradient(rgba(34,197,94,0.04) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(34,197,94,0.04) 1px, transparent 1px);
+      background-size: 40px 40px; pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--green-glow); border: 1px solid rgba(34,197,94,0.3); color: var(--green);
+      padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 28px;
+    }
+    .hero h1 { font-size: clamp(36px,6vw,72px); font-weight: 700; letter-spacing: -2px; line-height: 1.1; margin-bottom: 24px; }
+    .hero h1 .highlight { color: var(--green); }
+    .hero-tagline { font-size: clamp(16px,2vw,20px); color: var(--text-dim); max-width: 600px; margin: 0 auto 56px; font-weight: 300; }
+    .stats-grid { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin-bottom: 48px; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px 28px; min-width: 140px; position: relative; overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--green), transparent);
+    }
+    .stat-number { font-family: var(--font-mono); font-size: 32px; font-weight: 600; color: var(--green); display: block; }
+    .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+    .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      background: var(--green); color: #000; font-weight: 600;
+      padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover { background: var(--green-dim); transform: translateY(-1px); }
+    .btn-secondary {
+      background: transparent; color: var(--text-dim); border: 1px solid var(--border);
+      padding: 12px 28px; border-radius: 8px; text-decoration: none; font-size: 14px;
+      transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-secondary:hover { border-color: var(--green); color: var(--green); transform: translateY(-1px); }
+
+    /* TICKER */
+    .ticker-wrap {
+      background: var(--bg3); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      overflow: hidden; white-space: nowrap; padding: 8px 0;
+    }
+    @keyframes scrollLeft { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .ticker-inner { display: inline-block; animation: scrollLeft 50s linear infinite; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+    .ticker-item { margin: 0 32px; }
+    .ticker-item .up { color: var(--green); }
+    .ticker-item .dn { color: var(--red); }
+
+    /* SECTIONS */
+    section { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
+    .section-label { font-family: var(--font-mono); font-size: 11px; color: var(--green); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+    .section-title { font-size: clamp(24px,4vw,40px); font-weight: 700; letter-spacing: -1px; margin-bottom: 16px; }
+    .section-desc { color: var(--text-dim); font-size: 16px; max-width: 620px; margin-bottom: 48px; }
+    .divider { border: none; height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 0 24px; }
+
+    /* PIPELINE TIMELINE */
+    .pipeline { display: flex; flex-direction: column; gap: 0; }
+    .pipe-step { display: flex; gap: 20px; align-items: flex-start; position: relative; padding-bottom: 36px; }
+    .pipe-step:last-child { padding-bottom: 0; }
+    .pipe-step::after {
+      content: ''; position: absolute; left: 22px; top: 48px; bottom: 0; width: 2px;
+      background: linear-gradient(180deg, rgba(34,197,94,0.4), transparent);
+    }
+    .pipe-step:last-child::after { display: none; }
+    .pipe-num {
+      width: 44px; height: 44px; border-radius: 50%; background: var(--card2);
+      border: 2px solid var(--green); display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--green); flex-shrink: 0;
+    }
+    .pipe-content { flex: 1; padding-top: 8px; }
+    .pipe-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .pipe-desc { color: var(--text-dim); font-size: 14px; line-height: 1.6; }
+    .pipe-tag {
+      display: inline-block; margin-top: 8px; padding: 4px 10px; border-radius: 5px;
+      font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+      background: var(--green-glow); color: var(--green); border: 1px solid rgba(34,197,94,0.2);
+    }
+
+    /* SECTOR GRID */
+    .sector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    .sector-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; display: flex; align-items: center; gap: 12px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .sector-card:hover { border-color: var(--green); transform: translateY(-2px); }
+    .sector-icon {
+      width: 38px; height: 38px; border-radius: 8px; background: var(--green-glow);
+      border: 1px solid rgba(34,197,94,0.2); display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .sector-name { font-size: 13px; font-weight: 600; }
+    .sector-syms { font-size: 11px; color: var(--text-muted); margin-top: 3px; font-family: var(--font-mono); }
+
+    /* OUTPUT CARDS */
+    .output-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 20px; }
+    .output-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 28px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .output-card:hover { border-color: var(--green); transform: translateY(-2px); }
+    .output-icon { font-size: 32px; margin-bottom: 16px; }
+    .output-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+    .output-desc { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
+
+    /* FADE-IN */
+    .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+    /* ANIMATIONS */
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    .hero > * { animation: fadeInUp 0.6s ease both; }
+    .hero .hero-badge { animation-delay: 0.1s; }
+    .hero h1 { animation-delay: 0.2s; }
+    .hero .hero-tagline { animation-delay: 0.3s; }
+    .hero .stats-grid { animation-delay: 0.4s; }
+    .hero .hero-cta { animation-delay: 0.5s; }
+
+    /* FOOTER */
+    footer { text-align: center; padding: 40px 24px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12px; }
+    footer a { color: var(--green); text-decoration: none; }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 16px; }
+      .nav-links { display: none; }
+      .stat-number { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="overview.html" class="nav-brand"><i class="fa-solid fa-chart-line"></i> &nbsp;STOCK<span>·SCREENER</span></a>
+  <ul class="nav-links">
+    <li><a href="overview.html" class="active">Overview</a></li>
+    <li><a href="signals.html">Signals</a></li>
+    <li><a href="scoring.html">Scoring</a></li>
+    <li><a href="validation.html">Validation</a></li>
+    <li><a href="params.html">Params</a></li>
+    <li><a href="https://kailashb1070.github.io/tsp_board_StSc/" target="_blank" class="nav-cta">Live Dashboard ↗</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-badge"><i class="fa-solid fa-satellite-dish"></i> Live Every Weekday</div>
+  <h1>Free Self-Hosted<br><span class="highlight">Stock Screener</span></h1>
+  <p class="hero-tagline">A free, self-hosted technical analysis screener. Runs every weekday. Zero cost.</p>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-number" data-target="300" data-suffix="+">300+</span>
+      <div class="stat-label">Symbols</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number" data-target="13">13</span>
+      <div class="stat-label">Sectors</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">Daily</span>
+      <div class="stat-label">Runs</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-number">Free</span>
+      <div class="stat-label">Forever</div>
+    </div>
+  </div>
+  <div class="hero-cta">
+    <a href="https://kailashb1070.github.io/tsp_board_StSc/" target="_blank" class="btn-primary"><i class="fa-solid fa-arrow-up-right-from-square"></i> View Live Dashboard</a>
+    <a href="signals.html" class="btn-secondary">Browse Signals <i class="fa-solid fa-arrow-right"></i></a>
+  </div>
+</div>
+
+<!-- TICKER TAPE -->
+<div class="ticker-wrap">
+  <div class="ticker-inner">
+    <span class="ticker-item">AAPL <span class="up">▲</span></span>
+    <span class="ticker-item">MSFT <span class="up">▲</span></span>
+    <span class="ticker-item">NVDA <span class="up">▲</span></span>
+    <span class="ticker-item">TSLA <span class="up">▲</span></span>
+    <span class="ticker-item">AMZN <span class="up">▲</span></span>
+    <span class="ticker-item">META <span class="up">▲</span></span>
+    <span class="ticker-item">GOOGL <span class="up">▲</span></span>
+    <span class="ticker-item">JPM <span class="up">▲</span></span>
+    <span class="ticker-item">BAC <span class="up">▲</span></span>
+    <span class="ticker-item">XOM <span class="dn">▼</span></span>
+    <span class="ticker-item">CVX <span class="up">▲</span></span>
+    <span class="ticker-item">JNJ <span class="dn">▼</span></span>
+    <span class="ticker-item">PFE <span class="up">▲</span></span>
+    <span class="ticker-item">AMD <span class="up">▲</span></span>
+    <span class="ticker-item">INTC <span class="dn">▼</span></span>
+    <span class="ticker-item">SOFI <span class="up">▲</span></span>
+    <span class="ticker-item">CRWD <span class="up">▲</span></span>
+    <span class="ticker-item">PANW <span class="up">▲</span></span>
+    <!-- repeat for seamless scroll -->
+    <span class="ticker-item">AAPL <span class="up">▲</span></span>
+    <span class="ticker-item">MSFT <span class="up">▲</span></span>
+    <span class="ticker-item">NVDA <span class="up">▲</span></span>
+    <span class="ticker-item">TSLA <span class="up">▲</span></span>
+    <span class="ticker-item">AMZN <span class="up">▲</span></span>
+    <span class="ticker-item">META <span class="up">▲</span></span>
+    <span class="ticker-item">GOOGL <span class="up">▲</span></span>
+    <span class="ticker-item">JPM <span class="up">▲</span></span>
+    <span class="ticker-item">BAC <span class="up">▲</span></span>
+    <span class="ticker-item">XOM <span class="dn">▼</span></span>
+    <span class="ticker-item">CVX <span class="up">▲</span></span>
+    <span class="ticker-item">JNJ <span class="dn">▼</span></span>
+    <span class="ticker-item">PFE <span class="up">▲</span></span>
+    <span class="ticker-item">AMD <span class="up">▲</span></span>
+    <span class="ticker-item">INTC <span class="dn">▼</span></span>
+    <span class="ticker-item">SOFI <span class="up">▲</span></span>
+    <span class="ticker-item">CRWD <span class="up">▲</span></span>
+    <span class="ticker-item">PANW <span class="up">▲</span></span>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works">
+  <div class="fade-in">
+    <div class="section-label">// pipeline</div>
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-desc">Six automated steps run every weekday at 6 PM EST via GitHub Actions — no servers, no subscriptions.</p>
+  </div>
+  <div class="pipeline">
+    <div class="pipe-step fade-in">
+      <div class="pipe-num">1</div>
+      <div class="pipe-content">
+        <div class="pipe-title">GitHub Actions Triggers</div>
+        <div class="pipe-desc">Scheduled cron job fires Monday–Friday at 6 PM EST (11 PM UTC). Also triggerable manually via the Actions UI.</div>
+        <span class="pipe-tag">cron: 0 23 * * 1-5</span>
+      </div>
+    </div>
+    <div class="pipe-step fade-in">
+      <div class="pipe-num">2</div>
+      <div class="pipe-content">
+        <div class="pipe-title">yfinance Downloads OHLCV</div>
+        <div class="pipe-desc">300+ symbols across 13 sectors, 6 months of daily history. Free API — no key required. Flattens MultiIndex columns automatically.</div>
+        <span class="pipe-tag">300+ symbols · 6mo history</span>
+      </div>
+    </div>
+    <div class="pipe-step fade-in">
+      <div class="pipe-num">3</div>
+      <div class="pipe-content">
+        <div class="pipe-title">Stage 1 — Technical Pre-Filter</div>
+        <div class="pipe-desc">Fast gate: RSI 40–85, Vol Ratio &ge; 1.2&times;, Close/High &ge; 0.96, price above 95% of MA20. Roughly 15–30% of symbols pass.</div>
+        <span class="pipe-tag">~15–30% pass rate</span>
+      </div>
+    </div>
+    <div class="pipe-step fade-in">
+      <div class="pipe-num">4</div>
+      <div class="pipe-content">
+        <div class="pipe-title">Stage 2 — Strict Gates + Fundamentals</div>
+        <div class="pipe-desc">All-or-nothing: RSI 50–75, MACD line &gt; 0, Vol &ge; 1.5&times;, Close/High &ge; 98.5%, bullish candle, earnings buffer, D/E cap. Fundamental data fetched via yfinance info.</div>
+        <span class="pipe-tag">9 gates — all must pass</span>
+      </div>
+    </div>
+    <div class="pipe-step fade-in">
+      <div class="pipe-num">5</div>
+      <div class="pipe-content">
+        <div class="pipe-title">Conviction Scoring (0–100)</div>
+        <div class="pipe-desc">Five categories: MACD state, RSI zone, volume tier, price action, trend structure. Bonus points for fundamental quality. Labels: HIGH (&ge; 75) · MEDIUM (&ge; 55) · SPECULATIVE (&lt; 55).</div>
+        <span class="pipe-tag">5 categories · max 100 pts</span>
+      </div>
+    </div>
+    <div class="pipe-step fade-in">
+      <div class="pipe-num">6</div>
+      <div class="pipe-content">
+        <div class="pipe-title">Email + Dashboard + Git Commit</div>
+        <div class="pipe-desc">HTML email sent via Gmail SMTP. GitHub Pages dashboard updated. Results committed to <code style="color:var(--green);font-family:var(--font-mono);font-size:12px">results/YYYY-MM-DD.csv</code> for historical tracking.</div>
+        <span class="pipe-tag">email · pages · git</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- SECTORS -->
+<section id="sectors">
+  <div class="fade-in">
+    <div class="section-label">// coverage</div>
+    <h2 class="section-title">13 Sectors Covered</h2>
+    <p class="section-desc">US NYSE/NASDAQ and Canada TSX symbols. Each sector runs as a separate step in the workflow.</p>
+  </div>
+  <div class="sector-grid">
+    <div class="sector-card fade-in">
+      <div class="sector-icon">💻</div>
+      <div>
+        <div class="sector-name">Technology</div>
+        <div class="sector-syms">AAPL MSFT NVDA AMD INTC TSLA PLTR CRWD</div>
+      </div>
+    </div>
+    <div class="sector-card fade-in">
+      <div class="sector-icon">🏦</div>
+      <div>
+        <div class="sector-name">Finance</div>
+        <div class="sector-syms">JPM BAC GS V MA COIN SOFI BRK-B</div>
+      </div>
+    </div>
+    <div class="sector-card fade-in">
+      <div class="sector-icon">🏥</div>
+      <div>
+        <div class="sector-name">Healthcare</div>
+        <div class="sector-syms">JNJ PFE ABBV LLY GILD VRTX DXCM</div>
+      </div>
+    </div>
+    <div class="sector-card fade-in">
+      <div class="sector-icon">🍔</div>
+      <div>
+        <div class="sector-name">Consumer</div>
+        <div class="sector-syms">KO PEP MCD SBUX WMT COST MDLZ</div>
+      </div>
+    </div>
+    <div class="sector-card fade-in">
+      <div class="sector-icon">⚡</div>
+      <div>
+        <div class="sector-name">Energy</div>
+        <div class="sector-syms">XOM CVX NEE ENPH FSLR TAN ICLN</div>
+      </div>
+    </div>
+    <div class="sector-card fade-in">
+      <div class="sector-icon">📡</div>
+      <div>
+        <div class="sector-name">Telecom</div>
+        <div class="sector-syms">T VZ TMUS NFLX DIS CHTR CMCSA</div>
+      </div>
+    </div>
+    <div class="sector-card fade-in">
+      <div class="sector-icon">🛒</div>
+      <div>
+        <div class="sector-name">E-Commerce</div>
+        <div class="sector-syms">AMZN SHOP MELI EBAY FIVE ROST</div>
+      </div>
+    </div>
+    <div class="sector-card fade-in">
+      <div class="sector-icon">🎮</div>
+      <div>
+        <div class="sector-name">Media</div>
+        <div class="sector-syms">DIS NFLX SPOT TTWO EA RBLX LYV</div>
+      </div>
+    </div>
+    <div class="sector-card fade-in">
+      <div class="sector-icon">🔒</div>
+      <div>
+        <div class="sector-name">Cybersecurity</div>
+        <div class="sector-syms">CRWD PANW ZS OKTA FTNT S</div>
+      </div>
+    </div>
+    <div class="sector-card fade-in">
+      <div class="sector-icon">💼</div>
+      <div>
+        <div class="sector-name">Business Services</div>
+        <div class="sector-syms">ACN ADP PAYX MCO SPGI CME</div>
+      </div>
+    </div>
+    <div class="sector-card fade-in">
+      <div class="sector-icon">🌱</div>
+      <div>
+        <div class="sector-name">Environmental</div>
+        <div class="sector-syms">WM RSG WCN ECL AWK CWT</div>
+      </div>
+    </div>
+    <div class="sector-card fade-in">
+      <div class="sector-icon">🏢</div>
+      <div>
+        <div class="sector-name">Real Estate</div>
+        <div class="sector-syms">AMT PLD EQIX SPG VTR WELL VNQ</div>
+      </div>
+    </div>
+    <div class="sector-card fade-in">
+      <div class="sector-icon">🔧</div>
+      <div>
+        <div class="sector-name">Industrials</div>
+        <div class="sector-syms">BA RTX LMT CAT DE UPS FDX CHRW</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- TWO OUTPUTS -->
+<section id="outputs">
+  <div class="fade-in">
+    <div class="section-label">// outputs</div>
+    <h2 class="section-title">Two Outputs, Every Run</h2>
+    <p class="section-desc">Every weekday run produces an email alert and updates the live dashboard automatically.</p>
+  </div>
+  <div class="output-grid">
+    <div class="output-card fade-in">
+      <div class="output-icon">📧</div>
+      <div class="output-title">Email Alert</div>
+      <div class="output-desc">
+        HTML-formatted email sent via Gmail SMTP after every run. Color-coded conviction badges (HIGH / MEDIUM / SPECULATIVE),
+        signal tables with Close, RSI, MACD, Volume Ratio, and 52W High columns. Sends "no signals found" confirmation on quiet days.
+      </div>
+    </div>
+    <div class="output-card fade-in">
+      <div class="output-icon">📊</div>
+      <div class="output-title">Live Dashboard</div>
+      <div class="output-desc">
+        Auto-generated HTML page hosted on GitHub Pages. Updated after every run. Shows the latest signals with full metadata.
+        Historical archive pages available at <code style="color:var(--green);font-family:var(--font-mono);font-size:12px">docs/YYYY-MM-DD.html</code>.
+        <br><br>
+        <a href="https://kailashb1070.github.io/tsp_board_StSc/" target="_blank" style="color:var(--green);font-size:13px">kailashb1070.github.io/tsp_board_StSc/ ↗</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- FOOTER -->
+<footer>
+  <p>Auto-generated by GitHub Actions &nbsp;·&nbsp; Not financial advice &nbsp;·&nbsp; Free forever</p>
+  <p style="margin-top:8px;">
+    <a href="overview.html">Overview</a> &nbsp;·&nbsp;
+    <a href="signals.html">Signals</a> &nbsp;·&nbsp;
+    <a href="scoring.html">Scoring</a> &nbsp;·&nbsp;
+    <a href="validation.html">Validation</a> &nbsp;·&nbsp;
+    <a href="params.html">Params</a>
+  </p>
+</footer>
+
+<script>
+  // IntersectionObserver fade-in
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // Animated counters
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      const target = parseInt(el.dataset.target);
+      const suffix = el.dataset.suffix || '';
+      if (!target) return;
+      let start = 0;
+      const step = Math.ceil(target / 40);
+      const timer = setInterval(() => {
+        start = Math.min(start + step, target);
+        el.textContent = start + suffix;
+        if (start >= target) clearInterval(timer);
+      }, 30);
+      counterObserver.unobserve(el);
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.stat-number[data-target]').forEach(el => counterObserver.observe(el));
+</script>
+</body>
+</html>
